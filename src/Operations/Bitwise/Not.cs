@@ -18,12 +18,7 @@ namespace synacor_challange.Instructions
 		public bool Execute(IVirtualMemory memory)
 		{
 			ushort a = memory.ReadNext();
-			ushort b = memory.ReadNext();
-
-			if (memory.IsRegistry(b))
-			{
-				b = memory.Read(b);
-			}
+			ushort b = memory.TryReadRegistry(memory.ReadNext());
 
 			// stores the 15 bitwise invert
 			var result = (ushort)(~b & 0b111111111111111);

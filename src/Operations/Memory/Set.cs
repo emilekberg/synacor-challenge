@@ -25,12 +25,7 @@ namespace synacor_challange.Operations
 		public bool Execute(IVirtualMemory memory)
 		{
 			ushort a = memory.ReadNext();
-			ushort b = memory.ReadNext();
-			Logger.Debug($"- a: {a}, b: {b}");
-			if (memory.IsRegistry(b))
-			{
-				b = memory.Read(b);
-			}
+			ushort b = memory.TryReadRegistry(memory.ReadNext());
 			Logger.Debug($"- a: {a}, b: {b}");
 			memory.Write(a, b);
 			return true;

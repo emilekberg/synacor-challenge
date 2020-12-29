@@ -14,7 +14,7 @@ namespace synacor_challange.Parsers
 		public static void SaveStateToFile(IVirtualMemory memory, string path, Dictionary<ushort, IOperation> operations)
 		{
 			var sb = new StringBuilder();
-			var memoryPadLength = (ushort.MaxValue + 9).ToString().Length;
+			var memoryPadLength = ushort.MaxValue.ToString().Length;
 			do
 			{
 				var currentMemAdress = memory.GetAddressPointer();
@@ -40,7 +40,7 @@ namespace synacor_challange.Parsers
 							{
 								if (memory.IsRegistry(x))
 								{
-									return $"${x - short.MaxValue}";
+									return $"${memory.ToRegistry(x)}";
 								}
 								if (operation.GetType() == typeof(Out))
 								{
@@ -81,19 +81,19 @@ namespace synacor_challange.Parsers
 					memory.ChangeAddressPointer((ushort)(memory.GetAddressPointer() - 1));
 					break;
 				}
-				var cUShort = memory.ReadNext();
-				if(memory.IsRegistry(cUShort))
+				var value = memory.ReadNext();
+				if(memory.IsRegistry(value))
 				{
-					str.Append($"${cUShort - short.MaxValue}");
+					str.Append($"${memory.ToRegistry(value)}");
 				}
 				else
 				{
-					var c = Convert.ToChar(cUShort);
+					var c = Convert.ToChar(value);
 					str.Append(c);
 				}
 
 			}
-			int padlen = (short.MaxValue + 9).ToString().Count();
+			int padlen = short.MaxValue.ToString().Length;
 			sb
 				.Append($"{start.ToString().PadLeft(padlen, '0')}")
 				.Append(" : ")

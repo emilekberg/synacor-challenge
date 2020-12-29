@@ -39,12 +39,12 @@ namespace synacor_challange.Parsers
 				if (x.StartsWith("$"))
 				{
 					var reg = int.Parse(x.Replace("$", string.Empty));
-					return (ushort)(short.MaxValue + reg);
+					return (ushort)(Constants.MemoryConstants.RegistryLower + reg);
 				}
 				return Convert.ToUInt16(x);
 			});
 		}
-		public static ushort[] DisassembledToProgram(string path)
+		public static ushort[] CompileProgram(string path)
 		{
 			var instructionLookups = new List<string>
 			{
@@ -53,42 +53,56 @@ namespace synacor_challange.Parsers
 				"in",   "noop"
 			};
 			string[] serializedData = File.ReadAllLines(path);
-			var re = new Regex(@"\d+ : .*");
+
 			var programData = new List<ushort>();
-			foreach(var line in serializedData)
+			foreach (var line in serializedData)
 			{
 				var split = line.Split(" : ", 2);
 				var rowInfo = split[0].Trim();
-				var rowData = split[1].Trim();
+				var rowData = split[1].TrimStart();
 
 				var splitRowData = rowData.Split(' ', 2);
 				var op = splitRowData[0].Trim();
-				var opCode = (ushort)instructionLookups.IndexOf(op);
-				switch(op)
+				var indexOfOpCode = instructionLookups.IndexOf(op);
+				ushort opCode = indexOfOpCode == -1 ? ushort.Parse(op) : (ushort)indexOfOpCode;
+				switch (op)
 				{
 					default:
 						programData.Add(opCode);
-						if(splitRowData.Length > 1)
+						if (splitRowData.Length > 1)
 						{
 							var parameters = MapParameters(splitRowData[1].Trim());
 							programData.AddRange(parameters);
 						}
 						break;
 					case "out":
-						var outs = splitRowData[1].ToCharArray().Select(c =>
+						List<ushort> outs;
+						if (splitRowData[1].StartsWith('$'))
 						{
-							return new List<ushort>
+							var str = splitRowData[1];
+							var regNumber = int.Parse(str.Replace("$", string.Empty));
+							var reg = (ushort)(Constants.MemoryConstants.RegistryLower + regNumber);
+							outs = new List<ushort>
 							{
 								opCode,
-								Convert.ToUInt16(c)
+								reg
 							};
-						}).SelectMany(x => x).ToList();
+						}
+						else
+						{
+							outs = splitRowData[1].Replace("\\n", "\n").ToCharArray().Select(c =>
+							{
+								return new List<ushort>
+								{
+									opCode,
+									Convert.ToUInt16(c)
+								};
+							}).SelectMany(x => x).ToList();
+						}
 						programData.AddRange(outs);
 						break;
 				}
 			}
-
-
 			return programData.ToArray();
 		}
 	}

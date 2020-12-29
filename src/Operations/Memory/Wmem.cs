@@ -23,17 +23,8 @@ namespace synacor_challange.Instructions
 		public ushort GetNumParameters() => 2;
 		public bool Execute(IVirtualMemory memory)
 		{
-			ushort a = memory.ReadNext();
-			ushort b = memory.ReadNext();
-			Logger.Debug($"- a: {a}, b: {b}");
-			if (memory.IsRegistry(a))
-			{
-				a = memory.Read(a);
-			}
-			if (memory.IsRegistry(b))
-			{
-				 b = memory.Read(b);
-			}
+			ushort a = memory.TryReadRegistry(memory.ReadNext());
+			ushort b = memory.TryReadRegistry(memory.ReadNext());
 			Logger.Debug($"- a: {a}, b: {b}");
 			memory.Write(a, b);
 			return true;

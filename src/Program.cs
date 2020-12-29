@@ -13,44 +13,25 @@ namespace synacor_challange
 	{
 		static void Main(string[] args)
 		{
-			Console.ForegroundColor = ConsoleColor.Green;
-			// clear file if debug
-			File.WriteAllText(@"./log.txt", string.Empty); 
-			var log = new LoggerConfiguration()
-				.WriteTo.File("log.txt")
-#if DEBUG
-				//.WriteTo.Debug()
-#endif
-				.CreateLogger();
-			var serviceCollection = new ServiceCollection();
-
-			serviceCollection.AddSingleton<ILogger>(log);
-
-			RegisterServices(serviceCollection);
-
-			var serviceProvider = serviceCollection.BuildServiceProvider();
-
+			var serviceProvider = BuildServiceProvider();
 			var vm = serviceProvider.GetService<VirtualMachine>();
-#if DEBUG
-			vm.DebugPrintOperations();
-#endif
-			var program = ProgramParser.BinaryToProgram("./Programs/challenge.bin");
-			
-			vm.LoadProgram(program);
-			/*
-			vm.SaveState();
-			var program2 = ProgramParser.DisassembledToProgram("./program.txt");
-
-			vm.LoadProgram(program);
-			vm.SaveState();
-			*/
+			var programBinary = ProgramParser.BinaryToProgram("./Programs/challenge.bin");
+			//var programCompiled = ProgramParser.CompileProgram("./program.txt");
+			vm.LoadProgram(programBinary);
+			// vm.ExportProgram();
 			vm.Run();
 		}
-
-		public static void RegisterServices(ServiceCollection services) => services
+		public static IServiceProvider BuildServiceProvider()
+		{
+			IServiceCollection serviceCollection = new ServiceCollection();
+			RegisterServices(serviceCollection);
+			return serviceCollection.BuildServiceProvider();
+		}
+		public static IServiceCollection RegisterServices(IServiceCollection services) => services
 			.AddSingleton<VirtualMachine>()
 			.AddSingleton<IVirtualMemory, VirtualMemory>()
-			.AddVmOperations();
+			.AddVmOperations()
+			.AddSerilog();
 
 	}
 }

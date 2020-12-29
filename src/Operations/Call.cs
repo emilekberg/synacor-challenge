@@ -18,11 +18,7 @@ namespace synacor_challange.Instructions
 		public ushort GetNumParameters() => 1;
 		public bool Execute(IVirtualMemory memory)
 		{
-			ushort a = memory.ReadNext();
-			if(memory.IsRegistry(a))
-			{
-				a = memory.Read(a);
-			}
+			ushort a = memory.TryReadRegistry(memory.ReadNext());
 			ushort b = (ushort)(memory.GetAddressPointer());
 			memory.PushStack(b);
 			memory.ChangeAddressPointer(a);

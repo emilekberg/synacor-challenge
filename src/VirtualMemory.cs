@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using synacor_challange.Constants;
 using synacor_challange.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,14 +11,11 @@ namespace synacor_challange
 {
 	public class VirtualMemory : IVirtualMemory
 	{
-		public ushort[] Address { get; protected set; }
-		public Stack<ushort> Stack { get; protected set; }
+		public ushort[] Address { get; set; }
+		public Stack<ushort> Stack { get; set; }
 
-		public ushort CurrentAddress { get; protected set; }
-		public ushort[] Registry
-		{
-			get => Address.Skip(short.MaxValue).Take(8+1).ToArray();
-		}
+		public ushort CurrentAddress { get; set; }
+		public ushort[] Registry { get; set; }
 		private ILogger Logger { get; }
 		public VirtualMemory(ILogger logger)
 		{
@@ -28,42 +26,18 @@ namespace synacor_challange
 		public void InitializeMemory()
 		{
 			Logger.Information("Initializing memory...");
-			Address = Enumerable.Range(0, short.MaxValue + 9).Select(_ => (ushort)0).ToArray();
+			Logger.Information($"creating general memory, size {MemoryConstants.MemorySize}...");
+			Address = Enumerable.Range(0, MemoryConstants.MemorySize).Select(_ => (ushort)0).ToArray();
+			Logger.Information($"creating registry, size {MemoryConstants.RegistrySize}...");
+			Registry = Enumerable.Range(0, MemoryConstants.RegistrySize).Select(_ => (ushort)0).ToArray();
 			Stack = new Stack<ushort>();
 			CurrentAddress = 0;
-			Logger.Information("Initializing memor done!");
+			Logger.Information("Initializing memory done!");
 		}
-
-		public ushort GetAddressPointer() => CurrentAddress;
-
-		/// <summary>
-		/// Increments the CurrentAddress Pointer and returns the value in the next memory poistion.
-		/// </summary>
-		/// <returns></returns>
-		public ushort ReadNext()
-		{
-			return Address[CurrentAddress++];
-		}
-
-		public ushort Read(ushort address)
-		{
-			return Address[address];
-		}
-
-		/// <summary>
-		/// Writes a value to the memory address
-		/// </summary>
-		/// <param name="destination"></param>
-		/// <param name="value"></param>
-		public void Write(ushort address, ushort value)
-		{
-			Address[address] = value;
-		}
-
 		public void Copy(ushort[] data)
 		{
-			// 15-bit.
-			int maxlen = 0b111111111111111;
+			InitializeMemory();
+			int maxlen = MemoryConstants.FifteenBits;
 			if (data.Length > maxlen)
 			{
 				throw new Exception($"Program exceeds allowed length. Max: {maxlen}, Length: {data.Length}");
@@ -71,24 +45,55 @@ namespace synacor_challange
 			Array.Copy(data, Address, data.Length);
 		}
 
-		public void ChangeAddressPointer(ushort address)
+
+		public ushort GetAddressPointer() => CurrentAddress;
+		public void ChangeAddressPointer(ushort address) => CurrentAddress = address;
+		#region Memory
+		public ushort ReadNext() => Address[CurrentAddress++];
+
+		public ushort Read(ushort address) => Address[address];
+
+		public void Write(ushort addressOrRegister, ushort value)
 		{
-			CurrentAddress = address;
+			if(IsRegistry(addressOrRegister))
+			{
+				var registry = ToRegistry(addressOrRegister);
+				WriteRegistry(registry, value);
+			}
+			else
+			{
+				Address[addressOrRegister] = value;
+			}
+			
 		}
+		#endregion
+		#region stack
 
 		public void PushStack(ushort value) => Stack.Push(value);
 		public bool TryPopStack(out ushort value) => Stack.TryPop(out value);
+		#endregion
+		#region registry
+		public ushort ReadRegistry(ushort registry) => Registry[registry];
+		public ushort TryReadRegistry(ushort value)
+		{
+			if(IsRegistry(value))
+			{
+				var registry = ToRegistry(value);
+				return ReadRegistry(registry);
+			}
+			return value;
+		}
+		public void WriteRegistry(ushort registry, ushort value) => Registry[registry] = value;
 
 		public bool IsRegistry(ushort address)
 		{
-			const int RegistryLower = short.MaxValue;
-			const int RegistryUpper = short.MaxValue + 8;
-			return address > RegistryLower && address <= RegistryUpper;
+			return address >= MemoryConstants.RegistryLower && address < MemoryConstants.RegistryUpper;
 		}
-
-		public void SetRegistry(ushort registry, ushort value)
+		public ushort ToRegistry(ushort value)
 		{
-			Address[short.MaxValue + registry] = value;
+			return (ushort)(value - MemoryConstants.RegistryLower);
 		}
+		#endregion
+
 	}
 }

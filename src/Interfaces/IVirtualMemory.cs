@@ -66,6 +66,29 @@ namespace synacor_challange.Interfaces
 		/// Sets registry to a specific value. 
 		/// Example: SetRegistry(1, 40); will set registry 1 to 40.
 		/// </summary>
-		public void SetRegistry(ushort registry, ushort value);
+		public void WriteRegistry(ushort registry, ushort value);
+		/// <summary>
+		/// Reads a value from the registry and returns it.
+		/// </summary>
+		/// <param name="registry"></param>
+		/// <returns></returns>
+		public ushort ReadRegistry(ushort registry);
+		/// <summary>
+		/// Sees if address sent is a registry, if it is read from registry.
+		/// Otherwise return the value.
+		/// </summary>
+		/// <param name="registry"></param>
+		/// <returns></returns>
+		public ushort TryReadRegistry(ushort address);
+		/// <summary>
+		/// Converts a value to the registry address and returns it.
+		/// Example: 
+		///   - 32768 => 0
+		///   - 32769 => 1
+		///   - 32775 => 7
+		/// </summary>
+		/// <param name="address"></param>
+		/// <returns></returns>
+		public ushort ToRegistry(ushort value);
 	}
 }

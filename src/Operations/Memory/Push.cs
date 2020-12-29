@@ -18,11 +18,7 @@ namespace synacor_challange.Operations
 		public ushort GetNumParameters() => 1;
 		public bool Execute(IVirtualMemory memory)
 		{
-			var a = memory.ReadNext();
-			if (memory.IsRegistry(a))
-			{
-				a = memory.Read(a);
-			}
+			ushort a = memory.TryReadRegistry(memory.ReadNext());
 			memory.PushStack(a);
 			return true;
 		}

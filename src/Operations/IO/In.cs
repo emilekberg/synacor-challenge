@@ -20,6 +20,7 @@ namespace synacor_challange.Instructions
 		protected Queue<char> Input { get; }
  		protected ILogger Logger { get; }
 		protected bool Write { get; } = false;
+		protected bool Read { get; } = true;
 		public In(ILogger logger)
 		{
 			Logger = logger;
@@ -43,7 +44,7 @@ namespace synacor_challange.Instructions
 		public bool Execute(IVirtualMemory memory)
 		{
 			var a = memory.ReadNext();
-			if (!Input.TryDequeue(out char c))
+			if (!Read || !Input.TryDequeue(out char c))
 			{
 				var input = Console.ReadKey();
 
